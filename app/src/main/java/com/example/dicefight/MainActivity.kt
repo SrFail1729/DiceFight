@@ -10,6 +10,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -54,10 +56,13 @@ fun DiceFightApp() {
 @Composable
 fun VistaApp(modifier: Modifier = Modifier) {
 
-    val vidaPorcentaje by remember { mutableStateOf(1.0f) }
+    var vida by remember { mutableStateOf(20f) }
+    var ataque by remember { mutableStateOf(1) }
+    val vidaMax = 20f
+    val porcentajeVida = (vida/vidaMax).coerceIn(0f,1f)
 
     val vidaAnimacion by animateFloatAsState(
-        targetValue = vidaPorcentaje,
+        targetValue = porcentajeVida,
         animationSpec = tween(durationMillis = 500)
     )
 
@@ -80,7 +85,7 @@ fun VistaApp(modifier: Modifier = Modifier) {
 
             Image(
                 painter = painterResource(R.drawable.monster1),
-                contentDescription = "Dado",
+                contentDescription = "Monstruo1",
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -93,9 +98,15 @@ fun VistaApp(modifier: Modifier = Modifier) {
                 .background(Color.Black)
         ){
             Image(
-                painter = painterResource(CargarDados().get(1)),
+                painter = painterResource(CargarDados()[ataque-1]),
                 contentDescription = "Dado",
                 modifier = Modifier.fillMaxSize()
+                    .clickable(onClick = {
+                        ataque = (1..6).random()
+                        if (vida > 0){
+                            vida -= ataque
+                        }
+                    })
             )
         }
     }
