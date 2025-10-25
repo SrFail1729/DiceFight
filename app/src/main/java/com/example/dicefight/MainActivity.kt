@@ -16,12 +16,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -106,25 +109,7 @@ fun VistaApp(modifier: Modifier = Modifier) {
             BarraDeVida(
                 porcentajeVida = vidaAnimacionPlayer
             )
-            Image(
-                painter = painterResource(CargarDados()[ataque-1]),
-                contentDescription = "Dado",
-                modifier = Modifier.fillMaxSize()
-                    .clickable(onClick = {
-                        ataque = (1..6).random()
-                        if (vidaMob > 0){
-                            vidaMob -= ataque
-                        }
-
-                        scope.launch {
-                            delay(1000)
-                            if (vidaMob > 0 && vidaPlayer >0){
-                                val contraataque = (1..5).random()
-                                vidaPlayer -= contraataque
-                            }
-                        }
-                    })
-            )
+            AnimacionTirarDado(CargarDados())
         }
     }
 }
@@ -149,11 +134,46 @@ fun BarraDeVida(
     }
 }
 
+@Composable
+fun AnimacionTirarDado(imagesDado: List<Int>){
+    var dadoActual by remember { mutableStateOf(0)}
+    var isLanzando by remember { mutableStateOf(false) }
+    var resultadoDado by remember { mutableStateOf(0) }
+    var lanzarDado by remember { mutableStateOf(false) }
+
+    LaunchedEffect(lanzarDado) {
+        if (lanzarDado){
+            isLanzando = true
+            repeat(15){
+                dadoActual = (dadoActual + 1) % imagesDado.size
+                delay(80)
+            }
+            resultadoDado = (0 until imagesDado.size).random()
+            lanzarDado = false
+            isLanzando = false
+        }
+
+    }
+
+    Column (horizontalAlignment = Alignment.CenterHorizontally){
+        Image(
+            painter = painterResource(id = imagesDado[if (isLanzando) dadoActual else resultadoDado]),
+            contentDescription = "Cara del dado",
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(enabled = !isLanzando){
+                    lanzarDado = true
+                }
+        )
+    }
+
+}
+
 fun CargarDados(): List<Int> = listOf(
-    R.drawable.dice_1,
-    R.drawable.dice_2,
-    R.drawable.dice_3,
-    R.drawable.dice_4,
-    R.drawable.dice_5,
-    R.drawable.dice_6
+    R.drawable.dado_1,
+    R.drawable.dado_2,
+    R.drawable.dado_3,
+    R.drawable.dado_4,
+    R.drawable.dado_5,
+    R.drawable.dado_6
 )
