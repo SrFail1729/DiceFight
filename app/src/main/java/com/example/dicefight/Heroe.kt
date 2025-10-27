@@ -1,7 +1,6 @@
 package com.example.dicefight
 
 class Heroe(
-    var vidaMax: Float,
     var vida: Float,
     var defensa: Int,
     var dados: IntRange = (1..6),

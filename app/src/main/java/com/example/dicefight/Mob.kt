@@ -1,11 +1,12 @@
 package com.example.dicefight
 
+
 data class Mob(
     val nombre: String,
     val ataqueMin: Int,
     val ataqueMax: Int,
     val defensa: Int,
-    val vidaMax: Float,
+    val image: Int,
     var vida: Float,
     val vivo: Boolean
 ) {

@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,14 +55,15 @@ fun DiceFightApp() {
 
 @Composable
 fun VistaApp(modifier: Modifier = Modifier) {
-
-    var vidaMob by remember { mutableStateOf(20f) }
+    val mob = Miscelanea.monstruos[0]
+    var vidaMob by remember { mutableStateOf(mob.vida) }
     var vidaPlayer by remember { mutableStateOf(20f) }
-    var ataque by remember { mutableStateOf(1) }
-    val vidaMax = 20f
+    var ataque by remember { mutableStateOf(mob.ataqueMin) }
+    val vidaMaxMob = mob.vida
+    val vidaMaxPlayer = 20f
 
-    val porcentajeVidaMob = (vidaMob/vidaMax).coerceIn(0f,1f)
-    val porcentajeVidaPlayer = (vidaPlayer/vidaMax).coerceIn(0f,1f)
+    val porcentajeVidaMob = (vidaMob/vidaMaxMob).coerceIn(0f,1f)
+    val porcentajeVidaPlayer = (vidaPlayer/vidaMaxPlayer).coerceIn(0f,1f)
 
     val vidaAnimacionMob by animateFloatAsState(
         targetValue = porcentajeVidaMob,
@@ -73,44 +76,14 @@ fun VistaApp(modifier: Modifier = Modifier) {
         animationSpec = tween(durationMillis = 500)
     )
 
-    val scope = rememberCoroutineScope()
-
     Column(
         modifier = Modifier.background(Color.Blue)
             .fillMaxSize()
     ){
-        Box (
-            modifier = Modifier
-                .weight(2f)
-                .fillMaxWidth()
-                .padding(top = 10.dp, start = 10.dp, end = 10.dp)
-                .background(MoradoOscuro)
 
-        ){
+        ZonaMob(mob,vidaAnimacionMob, modifier = Modifier.weight(2f))
 
-            BarraDeVida(
-                porcentajeVida = vidaAnimacionMob,
-            )
-
-            Image(
-                painter = painterResource(R.drawable.monster1),
-                contentDescription = "Monstruo1",
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(10.dp)
-                .background(Color.Black)
-        ){
-            BarraDeVida(
-                porcentajeVida = vidaAnimacionPlayer
-            )
-            AnimacionTirarDado(CargarDados())
-        }
+       ZonaPlayer(vidaAnimacionPlayer, modifier = Modifier.weight(1f))
     }
 }
 
@@ -169,11 +142,45 @@ fun AnimacionTirarDado(imagesDado: List<Int>){
 
 }
 
-fun CargarDados(): List<Int> = listOf(
-    R.drawable.dado_1,
-    R.drawable.dado_2,
-    R.drawable.dado_3,
-    R.drawable.dado_4,
-    R.drawable.dado_5,
-    R.drawable.dado_6
-)
+@Composable
+fun ZonaMob(mob: Mob, vidaAnimacionMob: Float, modifier: Modifier = Modifier){
+    Column (
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, start = 10.dp, end = 10.dp)
+            .background(MoradoOscuro),
+        horizontalAlignment = Alignment.CenterHorizontally
+
+    ){
+
+        BarraDeVida(
+            porcentajeVida = vidaAnimacionMob,
+        )
+
+        Image(
+            painter = painterResource(mob.image),
+            contentDescription = mob.nombre,
+            modifier = Modifier
+                .fillMaxHeight(0.85f)
+                .aspectRatio(1f)
+                .align(Alignment.CenterHorizontally),
+            contentScale = ContentScale.Fit
+        )
+    }
+}
+
+@Composable
+fun ZonaPlayer(vidaAnimacionPlayer: Float, modifier: Modifier = Modifier){
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .background(Color.Black),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        BarraDeVida(
+            porcentajeVida = vidaAnimacionPlayer
+        )
+        AnimacionTirarDado(Miscelanea.dado)
+    }
+}
