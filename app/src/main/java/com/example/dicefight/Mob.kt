@@ -1,5 +1,7 @@
 package com.example.dicefight
 
+import kotlin.math.ln
+
 
 data class Mob(
     val nombre: String,
@@ -11,7 +13,8 @@ data class Mob(
     val vivo: Boolean
 ) {
     fun recibirDanyo(danyo: Int){
-        val danyoRecibido = (danyo - defensa).coerceAtLeast(1)
+        val k = 0.7f
+        val danyoRecibido = danyo / (1 + k * ln( ((1+ defensa).toDouble()) )).toFloat()
         vida = (vida - danyoRecibido).coerceAtLeast(0f)
     }
 
