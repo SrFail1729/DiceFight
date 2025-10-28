@@ -1,10 +1,13 @@
 package com.example.dicefight
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,11 +36,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.dicefight.ui.theme.MoradoOscuro
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        window.decorView.systemUiVisibility =
+            (View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         setContent {
             DiceFightApp()
         }
@@ -52,7 +61,8 @@ fun DiceFightApp() {
 
 @Composable
 fun VistaApp() {
-    val mob = Miscelanea.monstruos[0]
+    var indiceMob by remember { mutableStateOf(0) }
+    var mob = Miscelanea.monstruos[indiceMob]
     var vidaMob by remember { mutableStateOf(mob.vida) }
 
     val heroe = remember { Heroe(20f, defensa = 0) }
@@ -72,6 +82,8 @@ fun VistaApp() {
         animationSpec = tween(durationMillis = 500)
     )
 
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .background(Color.Blue)
@@ -86,6 +98,16 @@ fun VistaApp() {
                 heroe.objetoObtenido(resultado)
                 vidaPlayerMax = heroe.vidaMaxima
                 vidaPlayer = heroe.vida
+
+                //Siguiete mob con delay
+                scope.launch {
+                    delay(800)
+                    indiceMob++
+                    if (indiceMob < Miscelanea.monstruos.size){
+                        mob = Miscelanea.monstruos[indiceMob]
+                        vidaMob = mob.vida
+                    }
+                }
             },
             modifier = Modifier.weight(2f))
 
@@ -133,37 +155,38 @@ fun AnimacionTirarDado(
     imagesDado: List<Int>,
     onResultado:(Int)-> Unit){
 
-    var dadoActual by remember { mutableStateOf(0)}
+    var animacionInicial by remember { mutableStateOf(0)}
     var isLanzando by remember { mutableStateOf(false) }
-    var resultadoDado by remember { mutableStateOf(0) }
-    var lanzarDado by remember { mutableStateOf(false) }
 
-    LaunchedEffect(lanzarDado) {
-        if (lanzarDado){
-            isLanzando = true
-            repeat(15){
-                dadoActual = (dadoActual + 1) % imagesDado.size
-                delay(80)
-            }
-            resultadoDado = (0 until imagesDado.size).random()
-
-            //Da al exterior el resultado de la tirada
-            onResultado(resultadoDado + 1)
-
-            lanzarDado = false
+    //Creamos la animación
+    val animiacion by animateIntAsState(
+        targetValue = animacionInicial, //Valor final al que tiene que llegar la animación
+        animationSpec = tween(
+            durationMillis = 1000, // Duración de la animación
+            easing = LinearEasing // Mantine la velocidad constante
+        ),
+        finishedListener = {
             isLanzando = false
+            val valorDado = (animacionInicial % imagesDado.size) + 1 // Primero con el modulo nos aseguramos de que el valor este dentro del indice y luego +1 lo "convierte" en un numero real del 1 al 6
+            onResultado(valorDado)
         }
+    )
 
-    }
+    val caraActual = animiacion % imagesDado.size
+
 
     Column (horizontalAlignment = Alignment.CenterHorizontally){
         Image(
-            painter = painterResource(id = imagesDado[if (isLanzando) dadoActual else resultadoDado]),
+            painter = painterResource(id = imagesDado[caraActual]),
             contentDescription = "Cara del dado",
             modifier = Modifier
                 .fillMaxSize()
                 .clickable(enabled = !isLanzando) {
-                    lanzarDado = true
+                    if (!isLanzando){
+                        isLanzando = true
+                        val vueltas = 12 + (1..6).random() // Número de vueltas que dará nuestro dado, le agregamo un poco de aletoriedad para dar sensación de lanzar dados
+                        animacionInicial += vueltas
+                    }
                 }
         )
     }
@@ -241,8 +264,10 @@ fun ZonaMob(
                 onResultado = {
                     resultado -> loot(resultado)
                 }
-
             )
+            LaunchedEffect(mob) {
+                heroe.curacionEntreNivel()
+            }
         }
 
     }
