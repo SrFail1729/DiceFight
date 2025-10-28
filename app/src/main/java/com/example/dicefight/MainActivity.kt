@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.tooling.parseSourceInformation
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,6 +64,7 @@ fun DiceFightApp() {
 fun VistaApp() {
     var indiceMob by remember { mutableStateOf(0) }
     var mob = Miscelanea.monstruos[indiceMob]
+    var siguienteMob by remember { mutableStateOf(true) }
     var vidaMob by remember { mutableStateOf(mob.vida) }
 
     val heroe = remember { Heroe(20f, defensa = 2) }
@@ -71,6 +73,8 @@ fun VistaApp() {
 
     val vidaMaxMob = remember { mob.vida }
     var vidaPlayerMax = remember { heroe.vidaMaxima }
+
+    var juegoTerminado by remember { mutableStateOf(false) }
 
     val vidaAnimacionMob by animateFloatAsState(
         targetValue = (vidaMob/vidaMaxMob).coerceIn(0f,1f),
@@ -95,6 +99,8 @@ fun VistaApp() {
             mob,
             heroe,
             vidaAnimacionMob,
+            siguienteMob,
+            juegoTerminado,
             loot = {resultado ->
                 heroe.objetoObtenido(resultado)
                 vidaPlayerMax = heroe.vidaMaxima
@@ -104,9 +110,11 @@ fun VistaApp() {
                 scope.launch {
                     delay(800)
                     indiceMob++
-                    if (indiceMob < Miscelanea.monstruos.size){
+                    if (indiceMob < Miscelanea.monstruos.size-1){
                         mob = Miscelanea.monstruos[indiceMob]
                         vidaMob = mob.vida
+                    }else{
+                        siguienteMob = false
                     }
                 }
             },
@@ -131,7 +139,11 @@ fun VistaApp() {
                             vidaPlayer = heroe.vida
                         }
 
-                        delay(1000)
+                        if (!heroe.estaVivo() || (!mob.estaVivo()&& !siguienteMob && !heroe.estaVivo())){
+                            juegoTerminado = true
+                        }
+
+                        delay(100)
                         puedeAtacar = true
                     }
                 }
@@ -244,6 +256,8 @@ fun ZonaMob(
     mob: Mob,
     heroe: Heroe,
     vidaAnimacionMob: Float,
+    siguienteMob: Boolean,
+    juegoTerminado: Boolean,
     loot: (Int) -> Unit,
     modifier: Modifier = Modifier
 ){
@@ -260,27 +274,51 @@ fun ZonaMob(
             porcentajeVida = vidaAnimacionMob,
         )
 
-        if (mob.estaVivo()){
-            Image(
-                painter = painterResource(mob.image),
-                contentDescription = mob.nombre,
-                modifier = Modifier
-                    .fillMaxHeight(0.85f)
-                    .aspectRatio(1f)
-                    .align(Alignment.CenterHorizontally),
-                contentScale = ContentScale.Fit
-            )
-        }else{
-            AnimacionItem(Miscelanea.objetos,
-                onResultado = {
-                    resultado -> loot(resultado)
+        // Usamos un when para evitar el uso de muchos if-else, y con prioridades siendo la mas alta juego terminado
+
+        when{
+            juegoTerminado -> {
+                Image(
+                    painter = painterResource(R.drawable.gameover),
+                    contentDescription = "Victoria",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.CenterHorizontally),
+                    contentScale = ContentScale.Fit
+                )
+            }
+            mob.estaVivo() -> {
+                Image(
+                    painter = painterResource(mob.image),
+                    contentDescription = mob.nombre,
+                    modifier = Modifier
+                        .fillMaxHeight(0.85f)
+                        .aspectRatio(1f)
+                        .align(Alignment.CenterHorizontally),
+                    contentScale = ContentScale.Fit
+                )
+            }
+            siguienteMob ->{
+                AnimacionItem(Miscelanea.objetos,
+                    onResultado = {
+                            resultado -> loot(resultado)
+                    }
+                )
+                LaunchedEffect(mob) {
+                    heroe.curacionEntreNivel()
                 }
-            )
-            LaunchedEffect(mob) {
-                heroe.curacionEntreNivel()
+            }
+            else -> {
+                Image(
+                    painter = painterResource(R.drawable.throphy),
+                    contentDescription = "Victoria",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.CenterHorizontally),
+                    contentScale = ContentScale.Fit
+                )
             }
         }
-
     }
 }
 
@@ -289,7 +327,7 @@ fun ZonaPlayer(
     vidaAnimacionPlayer: Float,
     puedeAtacar: Boolean,
     modifier: Modifier = Modifier,
-    onTirarDado:(Int) -> Unit,
+    onTirarDado:(Int) -> Unit
 
 ) {
     Column(
