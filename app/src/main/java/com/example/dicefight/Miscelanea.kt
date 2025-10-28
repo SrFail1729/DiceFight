@@ -12,19 +12,29 @@ object Miscelanea {
         R.drawable.dado_6
     )
 
-    //Imágenes de monstruos
+    //Lista de monstruos
     val monstruos = listOf<Mob>(
         Mob(
-            nombre = "Bichito",
+            nombre = "Crimsonette",
             ataqueMin = 1,
             ataqueMax = 5,
             defensa = 0,
             image = R.drawable.monster1,
             vida = 15f,
             vivo = true
+        ),
+        Mob(
+            nombre = "Lurvion",
+            ataqueMin = 2,
+            ataqueMax = 7,
+            defensa = 2,
+            image = R.drawable.monster2,
+            vida = 15f,
+            vivo = true
         )
     )
 
+    //Lista de objetos
     val objetos = listOf(
         R.drawable.heartv3,
         R.drawable.potion,
