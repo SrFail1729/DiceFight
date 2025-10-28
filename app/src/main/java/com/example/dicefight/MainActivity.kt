@@ -65,8 +65,9 @@ fun VistaApp() {
     var mob = Miscelanea.monstruos[indiceMob]
     var vidaMob by remember { mutableStateOf(mob.vida) }
 
-    val heroe = remember { Heroe(20f, defensa = 0) }
+    val heroe = remember { Heroe(20f, defensa = 2) }
     var vidaPlayer by remember { mutableStateOf(heroe.vida) }
+    var puedeAtacar by remember { mutableStateOf(true) }
 
     val vidaMaxMob = remember { mob.vida }
     var vidaPlayerMax = remember { heroe.vidaMaxima }
@@ -111,22 +112,31 @@ fun VistaApp() {
             },
             modifier = Modifier.weight(2f))
 
-       ZonaPlayer(
-           vidaAnimacionPlayer, modifier = Modifier.weight(1f),
-           onTirarDado = {
-               resultado ->
-               val danyo = heroe.atacar(resultado)
-               mob.recibirDanyo(danyo)
-               vidaMob = mob.vida
+        ZonaPlayer(
+            vidaAnimacionPlayer = vidaAnimacionPlayer,
+            puedeAtacar = puedeAtacar,
+            modifier = Modifier.weight(1f),
+            onTirarDado = { resultado: Int ->
+                if (puedeAtacar && mob.estaVivo()) {
+                    puedeAtacar = false
+                    scope.launch {
+                        val danyoHeroe = heroe.atacar(resultado)
+                        mob.recibirDanyo(danyoHeroe)
+                        vidaMob = mob.vida
+                        delay(1000)
 
-               if(mob.estaVivo()){
-                   val danyoMob = mob.atacar()
-                   heroe.recibirDanyo(danyoMob)
-                   vidaPlayer = heroe.vida
-               }
+                        if (mob.estaVivo()) {
+                            val danyoMob = mob.atacar()
+                            heroe.recibirDanyo(danyoMob)
+                            vidaPlayer = heroe.vida
+                        }
 
-           }
-       )
+                        delay(1000)
+                        puedeAtacar = true
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -153,6 +163,7 @@ fun BarraDeVida(
 @Composable
 fun AnimacionTirarDado(
     imagesDado: List<Int>,
+    puedeAtacar: Boolean,
     onResultado:(Int)-> Unit){
 
     var animacionInicial by remember { mutableStateOf(0)}
@@ -181,7 +192,7 @@ fun AnimacionTirarDado(
             contentDescription = "Cara del dado",
             modifier = Modifier
                 .fillMaxSize()
-                .clickable(enabled = !isLanzando) {
+                .clickable(enabled = !isLanzando && puedeAtacar) {
                     if (!isLanzando){
                         isLanzando = true
                         val vueltas = 12 + (1..6).random() // Número de vueltas que dará nuestro dado, le agregamo un poco de aletoriedad para dar sensación de lanzar dados
@@ -276,25 +287,23 @@ fun ZonaMob(
 @Composable
 fun ZonaPlayer(
     vidaAnimacionPlayer: Float,
+    puedeAtacar: Boolean,
     modifier: Modifier = Modifier,
     onTirarDado:(Int) -> Unit,
 
-){
+) {
     Column(
-        modifier = modifier
+            modifier = modifier
             .fillMaxWidth()
             .padding(10.dp)
             .background(Color.Black),
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         BarraDeVida(
             porcentajeVida = vidaAnimacionPlayer
         )
-        AnimacionTirarDado(
-            Miscelanea.dado,
-            onResultado = {
-                resultado -> onTirarDado(resultado)
-            }
-        )
+        AnimacionTirarDado(Miscelanea.dado,puedeAtacar) { resultado: Int ->
+            if (puedeAtacar) onTirarDado(resultado)
+        }
     }
 }
