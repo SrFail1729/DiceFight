@@ -12,14 +12,17 @@ data class Mob(
     var vida: Float,
     val vivo: Boolean
 ) {
-    fun recibirDanyo(danyo: Int){
-        val k = 0.7f
+    fun recibirDanyo(danyo: Float){
+        val k = 0.5f
         val danyoRecibido = danyo / (1 + k * ln( ((1+ defensa).toDouble()) )).toFloat()
         vida = (vida - danyoRecibido).coerceAtLeast(0f)
     }
 
-    fun atacar(): Int{
-        return (ataqueMin..ataqueMax).random()
+    fun atacar(): Float{
+        var k = 0.35f
+        val ataqueBase = (ataqueMin..ataqueMax).random()
+        val danyo = ataqueBase * (1 + k * ln((1 + ataqueBase).toDouble())).toFloat()
+        return danyo
     }
 
     fun estaVivo(): Boolean = vida > 0
