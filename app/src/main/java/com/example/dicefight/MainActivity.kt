@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -27,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.tooling.parseSourceInformation
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -125,7 +123,7 @@ fun VistaApp() {
             puedeAtacar = puedeAtacar,
             modifier = Modifier.weight(1f),
             onTirarDado = { resultado: Int ->
-                if (puedeAtacar && mob.estaVivo()) {
+                if (puedeAtacar && mob.estaVivo() && !juegoTerminado) {
                     puedeAtacar = false
                     scope.launch {
                         val danyoHeroe = heroe.atacar(resultado)
@@ -144,7 +142,7 @@ fun VistaApp() {
                         }
 
                         delay(100)
-                        puedeAtacar = true
+                        puedeAtacar = !juegoTerminado
                     }
                 }
             }

@@ -6,7 +6,6 @@ class Heroe(
     var vida: Float,
     var defensa: Int,
     var ataqueBonus: Int = 0,
-    val vivo: Boolean = true
 ) {
     var vidaMaxima: Float = vida
 
