@@ -1,5 +1,7 @@
 package com.example.dicefight
 
+import kotlin.math.ln
+
 class Heroe(
     var vida: Float,
     var defensa: Int,
@@ -9,7 +11,8 @@ class Heroe(
     var vidaMaxima: Float = vida
 
     fun recibirDanyo(danyo: Int){
-        val danyoRecibido = (danyo - defensa).coerceAtLeast(1)
+        val k = 0.5f
+        val danyoRecibido = danyo / (1 + k * ln( ((1+ defensa).toDouble()) )).toFloat()
         vida = (vida - danyoRecibido).coerceAtLeast(0f)
     }
 
@@ -19,12 +22,16 @@ class Heroe(
 
     fun estaVivo(): Boolean = vida > 0
 
+    fun curacionEntreNivel() {
+        vida +=  (vidaMaxima - vida) * 0.53f
+    }
+
     fun objetoObtenido(objeto: Int){
         when(objeto){
-            1 -> vidaMaxima += 5
+            1 -> vidaMaxima += vidaMaxima * 0.5f
             2 -> vida = vidaMaxima
-            3 -> ataqueBonus + 2
-            4 -> defensa + 1
+            3 -> ataqueBonus += 3
+            4 -> defensa += 3
         }
     }
 }
