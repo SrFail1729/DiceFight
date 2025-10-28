@@ -61,7 +61,7 @@ fun DiceFightApp() {
 @Composable
 fun VistaApp() {
     var indiceMob by remember { mutableStateOf(0) }
-    var mob = Miscelanea.monstruos[indiceMob]
+    var mob by remember { mutableStateOf(Miscelanea.monstruos[indiceMob]) } // El mob no era un remeber entonces no lo recodaba androi :C
     var siguienteMob by remember { mutableStateOf(true) }
     var vidaMob by remember { mutableStateOf(mob.vida) }
 
@@ -108,7 +108,7 @@ fun VistaApp() {
                 scope.launch {
                     delay(800)
                     indiceMob++
-                    if (indiceMob < Miscelanea.monstruos.size-1){
+                    if (indiceMob < Miscelanea.monstruos.size){
                         mob = Miscelanea.monstruos[indiceMob]
                         vidaMob = mob.vida
                     }else{
